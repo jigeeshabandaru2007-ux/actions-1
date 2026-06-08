@@ -1,0 +1,99 @@
+name: Multi Job ASCII Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate_ascii:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Shell Script
+        run: |
+          cat << 'EOF' > script.sh
+          #!/bin/bash
+
+          echo "=================================="
+          echo "GitHub Actions Demo"
+          echo "=================================="
+
+          echo "Current User:"
+          whoami
+
+          echo ""
+          echo "Current Directory:"
+          pwd
+
+          echo ""
+          echo "Directory Contents:"
+          ls -lrtha
+
+          echo ""
+          echo "Generating ASCII Art"
+
+          echo "  _____ _ _   _   _       _     "
+          echo " / ____(_) | | | | |     | |    "
+          echo "| |  __ _| |_| |_| |_   _| |__  "
+          echo "| | |_ | | __| __| | | | | '_ \\"
+          echo "| |__| | | |_| |_| | |_| | |_) |"
+          echo " \\_____|_|\\__|\\__|_|\\__,_|_.__/ "
+
+          echo ""
+          echo "Execution completed successfully"
+          EOF
+
+      - name: Make Script Executable
+        run: chmod +x script.sh
+
+      - name: Execute Script
+        run: ./script.sh
+
+      - name: Create Output File
+        run: |
+          echo "Workflow Execution Report" > output.txt
+          echo "Generated on: $(date)" >> output.txt
+          echo "User: $(whoami)" >> output.txt
+          echo "Directory: $(pwd)" >> output.txt
+
+      - name: Upload Output File
+        uses: actions/upload-artifact@v4
+        with:
+          name: execution-report
+          path: output.txt
+
+  verify_output:
+    runs-on: ubuntu-latest
+    needs: generate_ascii
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: execution-report
+
+      - name: Display Output File
+        run: |
+          echo "Contents of output.txt"
+          cat output.txt
+
+          echo ""
+          echo "Listing files"
+          ls -lrtha
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: verify_output
+
+    steps:
+      - name: Final Status
+        run: |
+          echo "=================================="
+          echo "Workflow Completed Successfully"
+          echo "All Jobs Passed"
+          echo "=================================="
